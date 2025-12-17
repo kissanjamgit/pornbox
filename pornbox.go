@@ -43,7 +43,7 @@ func New(url string) PornBox {
 }
 
 func (pb PornBox) name(json string) (name string, err error) {
-	value := gjson.Get(json, "alternate.name").Value()
+	value := gjson.Get(json, "scene_name").Value()
 	var ok bool
 	if name, ok = value.(string); !ok {
 		err = fmt.Errorf("PornBox: (_name) `value.(string)` value: %v", value)
