@@ -76,7 +76,8 @@ func (pb *PornBox) Video() (content ContentResource, err error) {
 	if err != nil {
 		return
 	}
-	value = gjson.Get(getSrc.String(), "qualities.#(size==1080p).src")
+
+	value = gjson.Get(getSrc.String(), `qualities.@reverse.0.src`)
 	var src string
 	src, ok = value.Value().(string)
 	if !ok {
