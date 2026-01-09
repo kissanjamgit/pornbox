@@ -30,11 +30,10 @@ func main() {
 		fmt.Printf("#EXTM3U\n#EXTINF:-1,%s\n%s\n", cr.Name, cr.URL)
 		return
 	}
-	res, err := pornbox.Queue(list)
-	code := 0
-	if len(err) == 0 || len(res) == 0 {
-		fmt.Printf("ERROR: `len(err) == 0  || len(res) == 0` e: %v %v", err, res)
-		code = 1
+	res, errList := pornbox.Queue(list)
+	if len(res) == 0 {
+		fmt.Printf("ERROR: `len(res) == 0`")
+		os.Exit(1)
 	}
 	var buff strings.Builder
 	buff.WriteString("#EXTM3U\n")
@@ -43,5 +42,10 @@ func main() {
 	}
 	fmt.Print(buff.String())
 
-	os.Exit(code)
+	if len(errList) == 0 {
+		return
+	}
+	errString := strings.Join(errList, "\n")
+	fmt.Print(errString)
+	os.Exit(1)
 }

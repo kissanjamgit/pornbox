@@ -98,24 +98,17 @@ func (pb *PornBox) Video() (cr ContentResource, err error) {
 	return
 }
 
-func Queue(input []string) (result []ContentResource, errorList []struct {
-	url string
-	err error
-},
+func Queue(input []string) (result []ContentResource, errorList []string,
 ) {
 	client := resty.New()
 	defer client.Close()
 	for _, url := range input {
 		cr, err := video(url, client)
 		if err != nil {
-			errorList = append(errorList, struct {
-				url string
-				err error
-			}{url, err})
+			errorList = append(errorList, fmt.Sprintf("ERROR: %s (%v)", url, err))
 			continue
 		}
 		result = append(result, cr)
-
 	}
 	return
 }
