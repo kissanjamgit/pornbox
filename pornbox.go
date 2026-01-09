@@ -75,7 +75,7 @@ func video(input string, client *resty.Client) (cr ContentResource, err error) {
 		return
 	}
 
-	value = gjson.Get(getSrc.String(), `qualities.@reverse.0.src`)
+	value = gjson.Get(getSrc.String(), `qualities.@reverse.#(size==1080p).src`)
 	var src string
 	src, ok = value.Value().(string)
 	if !ok {
