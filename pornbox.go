@@ -30,7 +30,7 @@ var header = map[string]string{
 
 type ContentResource struct {
 	Name string `json:"name"`
-	Url  string `json:"url"`
+	URL  string `json:"url"`
 }
 
 type PornBox struct {
@@ -42,7 +42,7 @@ func New(url string) PornBox {
 	return PornBox{url, header}
 }
 
-func (pb PornBox) name(json string) (name string, err error) {
+func title(json string) (name string, err error) {
 	value := gjson.Get(json, "scene_name").Value()
 	var ok bool
 	if name, ok = value.(string); !ok {
@@ -52,19 +52,17 @@ func (pb PornBox) name(json string) (name string, err error) {
 	return
 }
 
-func (pb *PornBox) Video() (content ContentResource, err error) {
+func video(input string, client *resty.Client) (cr ContentResource, err error) {
 	re := regexp.MustCompile(`\d+`)
-	id := re.FindString(pb.url)
+	id := re.FindString(input)
 	url := fmt.Sprintf("https://pornbox.com/contents/%v", id)
-	client := resty.New()
-	defer client.Close()
 	client.SetHeaders(header)
 	var res *resty.Response
 	res, err = client.R().Get(url)
 	if err != nil {
 		return
 	}
-	value := gjson.Get(res.String(), "medias.#(title==Trailer).media_id")
+	value := gjson.Get(res.String(), "medias.@reverse.#(title==Trailer).media_id")
 	mediaID, ok := value.Value().(float64)
 	if !ok {
 		err = fmt.Errorf("PornBox: (video) `value.(float64)` value: %v ", value)
@@ -85,11 +83,39 @@ func (pb *PornBox) Video() (content ContentResource, err error) {
 		return
 	}
 	var name string
-	name, err = pb.name(res.String())
+	name, err = title(res.String())
 	if err != nil {
 		return
 	}
-	content = ContentResource{name, src}
+	cr = ContentResource{name, src}
+	return
+}
 
+func (pb *PornBox) Video() (cr ContentResource, err error) {
+	client := resty.New()
+	defer client.Close()
+	cr, err = video(pb.url, client)
+	return
+}
+
+func Queue(input []string) (result []ContentResource, errorList []struct {
+	url string
+	err error
+},
+) {
+	client := resty.New()
+	defer client.Close()
+	for _, url := range input {
+		cr, err := video(url, client)
+		if err != nil {
+			errorList = append(errorList, struct {
+				url string
+				err error
+			}{url, err})
+			continue
+		}
+		result = append(result, cr)
+
+	}
 	return
 }
